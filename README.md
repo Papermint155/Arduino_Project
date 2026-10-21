@@ -76,5 +76,111 @@ Before compiling and uploading the sketch in the **Arduino IDE** or **Arduino Cl
 You can easily adjust the trigger temperature at the top of the `.ino` sketch file:
 
 ```cpp
+
+
 // Change 28.0 to your preferred trigger temperature in Celsius
 const float TEMP_THRESHOLD = 28.0;<img width="3000" height="1957" alt="Automated Smart Fan" src="https://github.com/user-attachments/assets/35ffb725-2fbe-40ed-b09d-00f89783fdf1" />
+
+---
+
+# 🚨 Project 2: Laser Tripwire & Light Security Alarm
+
+A fast-response optical security alarm built with the **Cytron Maker UNO** (or standard Arduino UNO). A continuous laser beam is aimed directly at a **4-pin Photoresistor (Light Sensor) Module**. As long as the beam hits the sensor, the system remains armed and silent. The instant someone crosses the path and breaks the laser beam, the microcontroller triggers an alternating dual-tone police siren on the **piezo buzzer** and flashes a **red warning LED**.
+
+### 📸 Circuit Diagram
+
+
+<img width="567" height="330" alt="Laser trip wire" src="https://github.com/user-attachments/assets/fbdb8c2c-7465-476a-a7fd-22c7d1e2224d" />
+
+
+---
+
+## 🛠️ Hardware & Components Required (Project 2)
+
+* **Microcontroller:** Cytron Maker UNO (or standard Arduino UNO)
+* **Light Sensor:** 4-Pin Photoresistor / Light Detection Sensor Module (`VCC`, `GND`, `DO`, `AO`)
+* **Beam Emitter:** KY-008 650nm Laser Emitter Module (from the 37-in-1 Sensor Kit)
+* **Audio Alert:** Piezo Buzzer (External 2-wire buzzer or Maker UNO built-in Pin 8 buzzer)
+* **Visual Alert:** 5mm Red LED + 220Ω / 330Ω Current-Limiting Resistor (or Maker UNO built-in Pin 3 LED)
+* **Prototyping:** Half-size Breadboard & Male-to-Male / Male-to-Female Jumper Wires
+
+---
+
+## 🔌 Pinout & Wiring Guide (Project 2)
+
+| Component | Component Pin | Arduino UNO / Breadboard Connection |
+| :--- | :--- | :--- |
+| **Arduino Power** | `5V` | Breadboard `+` (Red 5V Power Rail) |
+| **Arduino Ground** | `GND` | Breadboard `-` (Blue Ground Rail) |
+| **4-Pin Light Sensor** | `VCC` | Breadboard `+` (5V Rail) |
+| **4-Pin Light Sensor** | `GND` | Breadboard `-` (GND Rail) |
+| **4-Pin Light Sensor** | `DO` (Digital Out) | **Digital Pin 2** |
+| **4-Pin Light Sensor** | `AO` (Analog Out) | **Analog Pin A0** *(Optional — for Serial Monitor calibration)* |
+| **Red Warning LED** | Anode (`+` / Bent Leg) | **Digital Pin 3** |
+| **Red Warning LED** | Cathode (`-` / Short Leg) | Breadboard `-` (GND Rail) **via 220Ω Resistor** |
+| **Laser Emitter Module** | `S` (Signal) | **Digital Pin 4** |
+| **Laser Emitter Module** | `-` (`GND`) | Breadboard `-` (GND Rail) |
+| **Piezo Buzzer** | Red Wire (`+` / Positive) | **Digital Pin 8** |
+| **Piezo Buzzer** | Black Wire (`-` / Negative) | Breadboard `-` (GND Rail) |
+
+---
+
+## 🚀 How It Works
+
+1. **System Arming:** When powered on, **Digital Pin 4** outputs `HIGH` (5V), keeping the laser beam shining continuously onto the face of the photoresistor.
+2. **Beam Monitoring:**
+   * **Beam Intact (Bright Light):** When the laser hits the photoresistor, the sensor module's onboard `LM393` comparator keeps the Digital Output (`DO`) pin **`LOW` (0)**. Both the buzzer and red LED stay off.
+   * **Beam Broken (Darkness):** When an object or person blocks the laser beam, light levels drop sharply and the `DO` pin switches **`HIGH` (1)**.
+3. **Intruder Alarm:** Once `Digital Pin 2` reads `HIGH`, the Arduino flashes **Digital Pin 3** (Red LED) and alternates **Digital Pin 8** (Piezo Buzzer) between `1200 Hz` and `1800 Hz` to create an urgent siren effect until the beam is restored.
+
+---
+
+## 💻 Arduino Sketch (Project 2)
+
+```cpp
+// Pin Definitions
+#define SENSOR_DO_PIN 2  // Sensor Digital Output (DO) -> Pin 2
+#define SENSOR_AO_PIN A0 // Sensor Analog Output (AO)  -> Pin A0
+#define LED_PIN 3        // Red Warning LED            -> Pin 3
+#define LASER_PIN 4      // Laser Emitter Module       -> Pin 4
+#define BUZZER_PIN 8     // Piezo Buzzer               -> Pin 8
+
+void setup() {
+  Serial.begin(9600);
+  
+  pinMode(SENSOR_DO_PIN, INPUT);
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(LASER_PIN, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+
+  // Turn the laser beam ON continuously
+  digitalWrite(LASER_PIN, HIGH);
+  digitalWrite(LED_PIN, LOW);
+}
+
+void loop() {
+  int beamBrokenDigital = digitalRead(SENSOR_DO_PIN);
+  int lightLevelAnalog = analogRead(SENSOR_AO_PIN);
+
+  // Print live readings to Serial Monitor for easy calibration
+  Serial.print("Light Level (AO): ");
+  Serial.print(lightLevelAnalog);
+  Serial.print(" | Digital State (DO): ");
+  Serial.println(beamBrokenDigital);
+
+  // HIGH = Beam is blocked (Dark) | LOW = Laser is hitting sensor (Bright)
+  if (beamBrokenDigital == HIGH) {
+    digitalWrite(LED_PIN, HIGH);
+    tone(BUZZER_PIN, 1200);
+    delay(120);
+    
+    digitalWrite(LED_PIN, LOW);
+    tone(BUZZER_PIN, 1800);
+    delay(120);
+  } else {
+    digitalWrite(LED_PIN, LOW);
+    noTone(BUZZER_PIN);
+  }
+
+  delay(50);
+}
