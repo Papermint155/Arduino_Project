@@ -1,0 +1,49 @@
+// Pin Definitions
+#define SENSOR_DO_PIN 2  
+#define SENSOR_AO_PIN A0 
+#define LED_PIN 3       
+#define LASER_PIN 4     
+#define BUZZER_PIN 8     
+
+// Analog threshold fallback (0 to 1023)
+const int TRIP_THRESHOLD = 500; 
+
+void setup() {
+  Serial.begin(9600);
+  
+  pinMode(SENSOR_DO_PIN, INPUT);
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(LASER_PIN, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+
+  // Turn the laser beam ON continuously
+  digitalWrite(LASER_PIN, HIGH);
+  digitalWrite(LED_PIN, LOW);
+}
+
+void loop() {
+  int beamBrokenDigital = digitalRead(SENSOR_DO_PIN);
+  int lightLevelAnalog = analogRead(SENSOR_AO_PIN);
+
+  // View live sensor values in the Serial Monitor
+  Serial.print("Light Level (AO): ");
+  Serial.print(lightLevelAnalog);
+  Serial.print(" | Digital State (DO): ");
+  Serial.println(beamBrokenDigital);
+
+  // On this 4-pin module:
+  if (beamBrokenDigital == HIGH) {
+    digitalWrite(LED_PIN, HIGH);
+    tone(BUZZER_PIN, 1200);
+    delay(120);
+    
+    digitalWrite(LED_PIN, LOW);
+    tone(BUZZER_PIN, 1800);
+    delay(120);
+  } else {
+    digitalWrite(LED_PIN, LOW);
+    noTone(BUZZER_PIN);
+  }
+
+  delay(50);
+}
