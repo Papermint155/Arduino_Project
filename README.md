@@ -80,7 +80,7 @@ You can easily adjust the trigger temperature at the top of the `.ino` sketch fi
 
 // Change 28.0 to your preferred trigger temperature in Celsius
 const float TEMP_THRESHOLD = 28.0;<img width="3000" height="1957" alt="Automated Smart Fan" src="https://github.com/user-attachments/assets/35ffb725-2fbe-40ed-b09d-00f89783fdf1" />
-
+```
 ---
 
 # 🚨 Project 2: Laser Tripwire & Light Security Alarm
